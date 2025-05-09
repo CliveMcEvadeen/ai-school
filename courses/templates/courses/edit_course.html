@@ -1,0 +1,17 @@
+{% extends "courses/base.html" %}
+{% block title %}Edit Course{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Edit Course</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_name" class="form-label">Course Name</label>
+            {{ form.name|add_class:"form-control" }}
+            {{ form.name.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Course</button>
+    </form>
+</div>
+{% endblock %}

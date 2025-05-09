@@ -1,0 +1,22 @@
+{% extends "courses/base.html" %}
+{% block title %}Add Session{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Add Session</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_start_year" class="form-label">Start Year</label>
+            {{ form.start_year|add_class:"form-control" }}
+            {{ form.start_year.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_end_year" class="form-label">End Year</label>
+            {{ form.end_year|add_class:"form-control" }}
+            {{ form.end_year.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Session</button>
+    </form>
+</div>
+{% endblock %}

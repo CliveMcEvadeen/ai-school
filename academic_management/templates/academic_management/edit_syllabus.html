@@ -1,0 +1,27 @@
+{% extends "academic_management/base.html" %}
+{% block title %}Edit Syllabus{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Edit Syllabus</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_curriculum" class="form-label">Curriculum</label>
+            {{ form.curriculum }}
+            {{ form.curriculum.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_subject" class="form-label">Subject</label>
+            {{ form.subject }}
+            {{ form.subject.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_content" class="form-label">Content</label>
+            {{ form.content }}
+            {{ form.content.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Syllabus</button>
+    </form>
+</div>
+{% endblock %}

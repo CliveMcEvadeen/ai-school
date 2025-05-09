@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Academic Management{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-color-light: #cce5ff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --text-color: #212529;
+        }
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .navbar, .footer {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-color-light);
+            border-color: var(--primary-color-light);
+            color: var(--primary-color);
+        }
+        .card {
+            border: 1px solid var(--primary-color-light);
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem var(--primary-color-light);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">Academic Management</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            {% block navbar %}
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'manage_curriculum' %}">Manage Curriculum</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'manage_syllabus' %}">Manage Syllabus</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'manage_timetable' %}">Manage Timetable</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'manage_lesson_plan' %}">Manage Lesson Plans</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'manage_resource' %}">Manage Resources</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{% url 'logout_user' %}">Logout</a></li>
+                </ul>
+            </div>
+            {% endblock %}
+        </div>
+    </nav>
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer text-center py-3">
+        &copy; 2024 Academic Management
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,120 @@
+{% extends "attendance/base.html" %}
+{% block title %}Staff Update Attendance{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Update Attendance</h2>
+    <form id="update-attendance-form" method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label for="subject" class="form-label">Subject</label>
+                <select id="subject" name="subject" class="form-select" required>
+                    <option value="">Select Subject</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="session" class="form-label">Session</label>
+                <select id="session" name="session" class="form-select" required>
+                    <option value="">Select Session</option>
+                    {% for session in sessions %}
+                    <option value="{{ session.id }}">{{ session }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="button" id="load-attendance" class="btn btn-primary">Load Attendance</button>
+            </div>
+        </div>
+        <div id="attendance-list" class="mb-3"></div>
+        <button type="submit" class="btn btn-success" style="display:none;" id="submit-update">Update Attendance</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('load-attendance').addEventListener('click', function() {
+    const subjectId = document.getElementById('subject').value;
+    const sessionId = document.getElementById('session').value;
+    if (!subjectId || !sessionId) {
+        alert('Please select both subject and session.');
+        return;
+    }
+    fetchAttendance(subjectId, sessionId);
+});
+
+function fetchAttendance(subjectId, sessionId) {
+    fetch("{% url 'get_students' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'subject': subjectId,
+            'session': sessionId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.length === 0) {
+            document.getElementById('attendance-list').innerHTML = '<p>No students found for selected subject and session.</p>';
+            document.getElementById('submit-update').style.display = 'none';
+            return;
+        }
+        let html = '<table class="table table-striped"><thead><tr><th>Student Name</th><th>Present</th></tr></thead><tbody>';
+        data.forEach(student => {
+            html += `<tr>
+                <td>${student.name}</td>
+                <td><input type="checkbox" class="form-check-input" data-student-id="${student.id}" checked></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('attendance-list').innerHTML = html;
+        document.getElementById('submit-update').style.display = 'inline-block';
+    })
+    .catch(error => {
+        console.error('Error fetching attendance:', error);
+        alert('Failed to load attendance.');
+    });
+}
+
+document.getElementById('update-attendance-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const checkboxes = document.querySelectorAll('#attendance-list input[type="checkbox"]');
+    const studentData = [];
+    checkboxes.forEach(cb => {
+        studentData.push({
+            id: cb.getAttribute('data-student-id'),
+            status: cb.checked
+        });
+    });
+    const date = ''; // You may add logic to select attendance date or record id
+
+    fetch("{% url 'update_attendance' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'date': date,
+            'student_ids': JSON.stringify(studentData)
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Attendance updated successfully.');
+            window.location.reload();
+        } else {
+            alert('Failed to update attendance.');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating attendance:', error);
+        alert('Failed to update attendance.');
+    });
+});
+</script>
+{% endblock %}

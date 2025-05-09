@@ -1,0 +1,27 @@
+{% extends "results/base.html" %}
+{% block title %}Edit Report Card{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Edit Report Card</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_student" class="form-label">Student</label>
+            {{ form.student }}
+            {{ form.student.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_session" class="form-label">Session</label>
+            {{ form.session }}
+            {{ form.session.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_grades" class="form-label">Grades</label>
+            {{ form.grades }}
+            {{ form.grades.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Report Card</button>
+    </form>
+</div>
+{% endblock %}

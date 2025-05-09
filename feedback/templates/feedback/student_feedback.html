@@ -1,0 +1,41 @@
+{% extends "feedback/base.html" %}
+{% block title %}Submit Feedback{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Submit Feedback</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_feedback" class="form-label">Feedback</label>
+            {{ form.feedback|add_class:"form-control" }}
+            {{ form.feedback.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Feedback</button>
+    </form>
+    <hr />
+    <h3>Your Feedback History</h3>
+    <table class="table table-striped">
+        <thead class="table-primary">
+            <tr>
+                <th>Feedback</th>
+                <th>Reply</th>
+                <th>Date Submitted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedbacks %}
+            <tr>
+                <td>{{ feedback.feedback }}</td>
+                <td>{{ feedback.reply }}</td>
+                <td>{{ feedback.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">No feedback submitted yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

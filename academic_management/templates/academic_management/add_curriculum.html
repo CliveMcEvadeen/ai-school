@@ -1,0 +1,27 @@
+{% extends "academic_management/base.html" %}
+{% block title %}Add Curriculum{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Add Curriculum</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_course" class="form-label">Course</label>
+            {{ form.course }}
+            {{ form.course.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Title</label>
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Curriculum</button>
+    </form>
+</div>
+{% endblock %}

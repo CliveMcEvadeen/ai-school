@@ -1,0 +1,72 @@
+{% extends "attendance/base.html" %}
+{% block title %}Admin View Attendance{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Admin View Attendance</h2>
+    <form id="attendance-filter-form" method="post" class="row g-3">
+        {% csrf_token %}
+        <div class="col-md-4">
+            <label for="subject" class="form-label">Subject</label>
+            <select id="subject" name="subject" class="form-select">
+                <option value="">Select Subject</option>
+                {% for subject in subjects %}
+                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="session" class="form-label">Session</label>
+            <select id="session" name="session" class="form-select">
+                <option value="">Select Session</option>
+                {% for session in sessions %}
+                <option value="{{ session.id }}">{{ session }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="button" id="load-attendance" class="btn btn-primary">Load Attendance</button>
+        </div>
+    </form>
+    <div id="attendance-data" class="mt-4"></div>
+</div>
+
+<script>
+document.getElementById('load-attendance').addEventListener('click', function() {
+    const subjectId = document.getElementById('subject').value;
+    const sessionId = document.getElementById('session').value;
+    if (!subjectId || !sessionId) {
+        alert('Please select both subject and session.');
+        return;
+    }
+    fetchAttendance(subjectId, sessionId);
+});
+
+function fetchAttendance(subjectId, sessionId) {
+    fetch("{% url 'get_admin_attendance' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'subject': subjectId,
+            'session': sessionId,
+            'attendance_date_id': '' // You may add logic to select date or attendance record
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let html = '<table class="table table-striped"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody>';
+        data.forEach(item => {
+            html += `<tr><td>${item.name}</td><td>${item.status}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('attendance-data').innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error fetching attendance:', error);
+        alert('Failed to load attendance data.');
+    });
+}
+</script>
+{% endblock %}

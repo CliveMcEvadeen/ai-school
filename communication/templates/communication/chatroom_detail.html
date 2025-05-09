@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="d-flex flex-column" style="height: 80vh;">
+    <div class="d-flex border-bottom p-2 align-items-center">
+        <h4 class="mb-0 flex-grow-1">Chatroom: {{ chatroom.name }}</h4>
+        <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm">Toggle Dark Mode</button>
+    </div>
+    <div id="message-list" class="flex-grow-1 overflow-auto p-3 bg-light" style="scroll-behavior: smooth;">
+        {% for message in messages %}
+        <div class="message d-flex {% if message.sender == user %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
+            <div class="message-content p-2 rounded" style="max-width: 60%; background-color: {% if message.sender == user %}#dcf8c6{% else %}#fff{% endif %}; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;" data-message-id="{{ message.id }}">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>{{ message.sender.get_full_name }}</strong>
+                    <small class="text-muted ms-2">{{ message.timestamp|timesince }} ago</small>
+                </div>
+                <p class="mb-1">{{ message.content|linebreaks }}</p>
+                {% if message.attachments.all %}
+                <div class="attachments mb-1">
+                    {% for attachment in message.attachments.all %}
+                    <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name }}</a><br>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="message-reactions">
+                    <!-- Placeholder for reactions -->
+                    <span class="reaction" title="Like">👍</span>
+                    <span class="reaction" title="Love">❤️</span>
+                    <span class="reaction" title="Laugh">😂</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-muted mt-3">No messages yet.</p>
+        {% endfor %}
+    </div>
+    <form id="messageForm" method="post" enctype="multipart/form-data" class="p-3 border-top bg-white">
+        {% csrf_token %}
+        <div class="input-group">
+            {{ form.content }}
+            <button type="button" id="emojiBtn" class="btn btn-outline-secondary">😊</button>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </div>
+    </form>
+</div>
+
+<link rel="stylesheet" href="{% static 'emoji-picker/css/emoji-picker.css' %}">
+<script src="{% static 'emoji-picker/js/config.js' %}"></script>
+<script src="{% static 'emoji-picker/js/util.js' %}"></script>
+<script src="{% static 'emoji-picker/js/jquery.emojiarea.js' %}"></script>
+<script src="{% static 'emoji-picker/js/emoji-picker.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dark mode toggle
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    darkModeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+    });
+
+    // Emoji picker
+    const emojiBtn = document.getElementById('emojiBtn');
+    const textarea = document.querySelector('textarea[name="content"]');
+    $(textarea).emojiPicker({
+        width: '300px',
+        height: '200px',
+        button: emojiBtn
+    });
+
+    // Scroll to bottom on load
+    const messageList = document.getElementById('message-list');
+    messageList.scrollTop = messageList.scrollHeight;
+
+    // WebSocket setup
+    const chatroomId = "{{ chatroom.id }}";
+    const userId = {{ user.id }};
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const chatSocket = new WebSocket(
+        wsScheme + '://' + window.location.host +
+        '/ws/chat/' + chatroomId + '/'
+    );
+
+    // Typing indicator elements
+    let typingTimeout;
+    const typingIndicator = document.createElement('div');
+    typingIndicator.id = 'typingIndicator';
+    typingIndicator.style.fontStyle = 'italic';
+    typingIndicator.style.marginBottom = '10px';
+    typingIndicator.textContent = '';
+
+    messageList.parentNode.insertBefore(typingIndicator, messageList);
+
+    // Send typing event
+    textarea.addEventListener('input', () => {
+        chatSocket.send(JSON.stringify({
+            'type': 'typing',
+            'is_typing': true
+        }));
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            chatSocket.send(JSON.stringify({
+                'type': 'typing',
+                'is_typing': false
+            }));
+        }, 2000);
+    });
+
+    // Handle incoming WebSocket messages
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'message') {
+            // Append new message to message list
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'd-flex');
+            if (data.sender_id == userId) {
+                messageDiv.classList.add('justify-content-end');
+            } else {
+                messageDiv.classList.add('justify-content-start');
+            }
+            const bgColor = data.sender_id == userId ? '#dcf8c6' : '#fff';
+            messageDiv.innerHTML = `
+                <div class="message-content p-2 rounded" style="max-width: 60%; background-color: ${bgColor}; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;" data-message-id="${data.message_id || ''}">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>${data.sender_name}</strong>
+                        <small class="text-muted ms-2">${data.timestamp}</small>
+                    </div>
+                    <p class="mb-1">${data.message}</p>
+                    <div class="message-reactions">
+                        <span class="reaction" title="Like">👍</span>
+                        <span class="reaction" title="Love">❤️</span>
+                        <span class="reaction" title="Laugh">😂</span>
+                    </div>
+                </div>
+            `;
+            messageList.appendChild(messageDiv);
+            messageList.scrollTop = messageList.scrollHeight;
+        } else if (data.type === 'typing') {
+            if (data.is_typing) {
+                typingIndicator.textContent = `${data.sender_name} is typing...`;
+            } else {
+                typingIndicator.textContent = '';
+            }
+        } else if (data.type === 'read_receipt') {
+            // TODO: Update message read status UI
+            console.log(`Message ${data.message_id} read by user ${data.sender_id}`);
+        }
+    };
+
+    // Send read receipt on page load for all messages (simplified)
+    const messageElements = document.querySelectorAll('.message-content');
+    messageElements.forEach((el, index) => {
+        chatSocket.send(JSON.stringify({
+            'type': 'read_receipt',
+            'message_id': el.dataset.messageId
+        }));
+    });
+
+    // Send message on form submit
+    const messageForm = document.getElementById('messageForm');
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const messageInput = textarea;
+        const message = messageInput.value.trim();
+        if (message.length > 0) {
+            chatSocket.send(JSON.stringify({
+                'type': 'message',
+                'message': message
+            }));
+            messageInput.value = '';
+        }
+    });
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+});
+</script>
+
+<style>
+.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+.dark-mode .message-content {
+    background-color: #333;
+    color: #e0e0e0;
+}
+.message-reactions span {
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 1.2em;
+}
+</style>
+{% endblock %}

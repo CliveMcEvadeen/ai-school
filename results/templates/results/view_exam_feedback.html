@@ -1,0 +1,20 @@
+{% extends 'results/base.html' %}
+
+{% block content %}
+<h2>Feedback for Exam: {{ exam.name }}</h2>
+
+{% if feedbacks %}
+    <ul class="list-group">
+        {% for feedback in feedbacks %}
+        <li class="list-group-item">
+            <strong>{{ feedback.student.user.get_full_name }}</strong> ({{ feedback.created_at|date:"Y-m-d H:i" }})
+            <p>{{ feedback.feedback }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No feedback submitted yet.</p>
+{% endif %}
+
+<a href="{% url 'manage_exam' %}" class="btn btn-secondary mt-3">Back to Exams</a>
+{% endblock %}

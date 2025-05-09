@@ -1,0 +1,52 @@
+{% extends "users/base.html" %}
+{% block title %}Add Staff{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Add Staff</h2>
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_first_name" class="form-label">First Name</label>
+            {{ form.first_name|add_class:"form-control" }}
+            {{ form.first_name.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_last_name" class="form-label">Last Name</label>
+            {{ form.last_name|add_class:"form-control" }}
+            {{ form.last_name.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_email" class="form-label">Email</label>
+            {{ form.email|add_class:"form-control" }}
+            {{ form.email.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_password" class="form-label">Password</label>
+            {{ form.password|add_class:"form-control" }}
+            {{ form.password.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_gender" class="form-label">Gender</label>
+            {{ form.gender|add_class:"form-select" }}
+            {{ form.gender.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_address" class="form-label">Address</label>
+            {{ form.address|add_class:"form-control" }}
+            {{ form.address.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_course" class="form-label">Course</label>
+            {{ form.course|add_class:"form-select" }}
+            {{ form.course.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_profile_pic" class="form-label">Profile Picture</label>
+            {{ form.profile_pic|add_class:"form-control" }}
+            {{ form.profile_pic.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Staff</button>
+    </form>
+</div>
+{% endblock %}

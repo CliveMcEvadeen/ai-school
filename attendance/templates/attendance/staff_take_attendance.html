@@ -1,0 +1,124 @@
+{% extends "attendance/base.html" %}
+{% block title %}Staff Take Attendance{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Take Attendance</h2>
+    <form id="attendance-form" method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label for="subject" class="form-label">Subject</label>
+                <select id="subject" name="subject" class="form-select" required>
+                    <option value="">Select Subject</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="session" class="form-label">Session</label>
+                <select id="session" name="session" class="form-select" required>
+                    <option value="">Select Session</option>
+                    {% for session in sessions %}
+                    <option value="{{ session.id }}">{{ session }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="button" id="load-students" class="btn btn-primary">Load Students</button>
+            </div>
+        </div>
+        <div id="students-list" class="mb-3"></div>
+        <button type="submit" class="btn btn-success" style="display:none;" id="submit-attendance">Save Attendance</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('load-students').addEventListener('click', function() {
+    const subjectId = document.getElementById('subject').value;
+    const sessionId = document.getElementById('session').value;
+    if (!subjectId || !sessionId) {
+        alert('Please select both subject and session.');
+        return;
+    }
+    fetchStudents(subjectId, sessionId);
+});
+
+function fetchStudents(subjectId, sessionId) {
+    fetch("{% url 'get_students' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'subject': subjectId,
+            'session': sessionId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.length === 0) {
+            document.getElementById('students-list').innerHTML = '<p>No students found for selected subject and session.</p>';
+            document.getElementById('submit-attendance').style.display = 'none';
+            return;
+        }
+        let html = '<table class="table table-striped"><thead><tr><th>Student Name</th><th>Present</th></tr></thead><tbody>';
+        data.forEach(student => {
+            html += `<tr>
+                <td>${student.name}</td>
+                <td><input type="checkbox" class="form-check-input" data-student-id="${student.id}" checked></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('students-list').innerHTML = html;
+        document.getElementById('submit-attendance').style.display = 'inline-block';
+    })
+    .catch(error => {
+        console.error('Error fetching students:', error);
+        alert('Failed to load students.');
+    });
+}
+
+document.getElementById('attendance-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const subjectId = document.getElementById('subject').value;
+    const sessionId = document.getElementById('session').value;
+    const date = new Date().toISOString().split('T')[0];
+    const checkboxes = document.querySelectorAll('#students-list input[type="checkbox"]');
+    const studentData = [];
+    checkboxes.forEach(cb => {
+        studentData.push({
+            id: cb.getAttribute('data-student-id'),
+            status: cb.checked
+        });
+    });
+
+    fetch("{% url 'save_attendance' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: new URLSearchParams({
+            'subject': subjectId,
+            'session': sessionId,
+            'date': date,
+            'student_ids': JSON.stringify(studentData)
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Attendance saved successfully.');
+            window.location.reload();
+        } else {
+            alert('Failed to save attendance.');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving attendance:', error);
+        alert('Failed to save attendance.');
+    });
+});
+</script>
+{% endblock %}

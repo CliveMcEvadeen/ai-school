@@ -1,0 +1,37 @@
+{% extends "results/base.html" %}
+{% block title %}Manage Exams{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Manage Exams</h2>
+    <a href="{% url 'add_exam' %}" class="btn btn-primary mb-3">Add Exam</a>
+    <table class="table table-striped table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td>{{ exam.name }}</td>
+                <td>{{ exam.description|truncatewords:10 }}</td>
+                <td>{{ exam.start_date }}</td>
+                <td>{{ exam.end_date }}</td>
+                <td>
+                    <a href="{% url 'edit_exam' exam.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_exam' exam.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this exam?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No exams found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

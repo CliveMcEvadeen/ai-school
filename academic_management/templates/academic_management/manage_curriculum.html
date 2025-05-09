@@ -1,0 +1,35 @@
+{% extends "academic_management/base.html" %}
+{% block title %}Manage Curriculum{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Manage Curriculum</h2>
+    <a href="{% url 'add_curriculum' %}" class="btn btn-primary mb-3">Add Curriculum</a>
+    <table class="table table-striped table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>Course</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for curriculum in curriculums %}
+            <tr>
+                <td>{{ curriculum.course.name }}</td>
+                <td>{{ curriculum.title }}</td>
+                <td>{{ curriculum.description|truncatewords:10 }}</td>
+                <td>
+                    <a href="{% url 'edit_curriculum' curriculum.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_curriculum' curriculum.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this curriculum?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No curriculums found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex" style="height: 80vh;">
+    <div class="border-end" style="width: 300px; overflow-y: auto;">
+        <h4 class="p-3">Chatrooms</h4>
+        <a href="{% url 'communication:chatroom_create' %}" class="btn btn-primary m-3 w-90">Create New Chatroom</a>
+        <ul class="list-group list-group-flush">
+            {% for chatroom in chatrooms %}
+            <li class="list-group-item d-flex align-items-center">
+                <img src="{{ chatroom.creator.profile.avatar.url|default:'/static/images/default_avatar.png' }}" alt="Avatar" class="rounded-circle me-2" width="40" height="40">
+                <a href="{% url 'communication:chatroom_detail' chatroom.id %}" class="flex-grow-1 text-decoration-none">{{ chatroom.name }}</a>
+                {% if chatroom.creator.is_online %}
+                <span class="badge bg-success rounded-circle" title="Online" style="width: 12px; height: 12px;"></span>
+                {% else %}
+                <span class="badge bg-secondary rounded-circle" title="Offline" style="width: 12px; height: 12px;"></span>
+                {% endif %}
+            </li>
+            {% empty %}
+            <li class="list-group-item">You are not a member of any chatrooms.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="flex-grow-1 p-3">
+        <p>Select a chatroom to start chatting.</p>
+    </div>
+</div>
+{% endblock %}

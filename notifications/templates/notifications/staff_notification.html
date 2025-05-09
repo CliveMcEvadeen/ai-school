@@ -1,0 +1,63 @@
+{% extends "notifications/base.html" %}
+{% block title %}Notify Staff{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Send Notification to Staff</h2>
+    <form id="notifyStaffForm" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="staffSelect" class="form-label">Select Staff</label>
+            <select id="staffSelect" name="id" class="form-select">
+                <option value="">Select Staff</option>
+                {% for staff in allStaff %}
+                <option value="{{ staff.id }}">{{ staff.admin.first_name }} {{ staff.admin.last_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="message" class="form-label">Message</label>
+            <textarea id="message" name="message" class="form-control" rows="4"></textarea>
+        </div>
+        <button type="button" class="btn btn-primary" id="sendNotification">Send Notification</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('sendNotification').addEventListener('click', function() {
+    const staffId = document.getElementById('staffSelect').value;
+    const message = document.getElementById('message').value.trim();
+    if (!staffId) {
+        alert('Please select a staff member.');
+        return;
+    }
+    if (!message) {
+        alert('Please enter a message.');
+        return;
+    }
+    fetch("{% url 'send_staff_notification' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'id': staffId,
+            'message': message,
+        })
+    })
+    .then(response => response.text())
+    .then(success => {
+        if (success === 'True') {
+            alert('Notification sent successfully.');
+            document.getElementById('notifyStaffForm').reset();
+        } else {
+            alert('Failed to send notification.');
+        }
+    })
+    .catch(error => {
+        alert('Error sending notification.');
+        console.error(error);
+    });
+});
+</script>
+{% endblock %}

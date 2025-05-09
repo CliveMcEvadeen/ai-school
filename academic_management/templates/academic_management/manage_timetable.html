@@ -1,0 +1,41 @@
+{% extends "academic_management/base.html" %}
+{% block title %}Manage Timetable{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Manage Timetable</h2>
+    <a href="{% url 'add_timetable' %}" class="btn btn-primary mb-3">Add Timetable</a>
+    <table class="table table-striped table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>Course</th>
+                <th>Session</th>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Subject</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for timetable in timetables %}
+            <tr>
+                <td>{{ timetable.course.name }}</td>
+                <td>{{ timetable.session }}</td>
+                <td>{{ timetable.day_of_week }}</td>
+                <td>{{ timetable.start_time }}</td>
+                <td>{{ timetable.end_time }}</td>
+                <td>{{ timetable.subject.name }}</td>
+                <td>
+                    <a href="{% url 'edit_timetable' timetable.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_timetable' timetable.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this timetable?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No timetables found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

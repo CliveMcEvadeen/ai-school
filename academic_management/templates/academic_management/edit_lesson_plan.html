@@ -1,0 +1,37 @@
+{% extends "academic_management/base.html" %}
+{% block title %}Edit Lesson Plan{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Edit Lesson Plan</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_subject" class="form-label">Subject</label>
+            {{ form.subject }}
+            {{ form.subject.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Title</label>
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_objectives" class="form-label">Objectives</label>
+            {{ form.objectives }}
+            {{ form.objectives.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_activities" class="form-label">Activities</label>
+            {{ form.activities }}
+            {{ form.activities.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_resources" class="form-label">Resources</label>
+            {{ form.resources }}
+            {{ form.resources.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Lesson Plan</button>
+    </form>
+</div>
+{% endblock %}

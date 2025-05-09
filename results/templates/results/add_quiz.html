@@ -1,0 +1,27 @@
+{% extends "results/base.html" %}
+{% block title %}Add Quiz{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Add Quiz</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_exam" class="form-label">Exam</label>
+            {{ form.exam }}
+            {{ form.exam.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_title" class="form-label">Title</label>
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_total_marks" class="form-label">Total Marks</label>
+            {{ form.total_marks }}
+            {{ form.total_marks.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Quiz</button>
+    </form>
+</div>
+{% endblock %}

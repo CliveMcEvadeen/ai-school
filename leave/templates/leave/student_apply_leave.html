@@ -1,0 +1,54 @@
+{% extends "leave/base.html" %}
+{% block title %}Apply for Leave{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Apply for Leave</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_date" class="form-label">Date</label>
+            {{ form.date|add_class:"form-control" }}
+            {{ form.date.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_message" class="form-label">Message</label>
+            {{ form.message|add_class:"form-control" }}
+            {{ form.message.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Leave Application</button>
+    </form>
+    <hr />
+    <h3>Leave History</h3>
+    <table class="table table-striped">
+        <thead class="table-primary">
+            <tr>
+                <th>Date</th>
+                <th>Message</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave in leave_history %}
+            <tr>
+                <td>{{ leave.date }}</td>
+                <td>{{ leave.message }}</td>
+                <td>
+                    {% if leave.status == 1 %}
+                        Approved
+                    {% elif leave.status == -1 %}
+                        Rejected
+                    {% else %}
+                        Pending
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">No leave history found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "results/base.html" %}
+{% block title %}Add Student Result{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Add Student Result</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_student" class="form-label">Student</label>
+            {{ form.student|add_class:"form-select" }}
+            {{ form.student.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_subject" class="form-label">Subject</label>
+            {{ form.subject|add_class:"form-select" }}
+            {{ form.subject.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_test" class="form-label">Test Score</label>
+            {{ form.test|add_class:"form-control" }}
+            {{ form.test.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_exam" class="form-label">Exam Score</label>
+            {{ form.exam|add_class:"form-control" }}
+            {{ form.exam.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Result</button>
+    </form>
+</div>
+{% endblock %}

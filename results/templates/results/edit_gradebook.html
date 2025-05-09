@@ -1,0 +1,32 @@
+{% extends "results/base.html" %}
+{% block title %}Edit Gradebook Entry{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Edit Gradebook Entry</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_student" class="form-label">Student</label>
+            {{ form.student }}
+            {{ form.student.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_subject" class="form-label">Subject</label>
+            {{ form.subject }}
+            {{ form.subject.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_grade" class="form-label">Grade</label>
+            {{ form.grade }}
+            {{ form.grade.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_remarks" class="form-label">Remarks</label>
+            {{ form.remarks }}
+            {{ form.remarks.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Gradebook Entry</button>
+    </form>
+</div>
+{% endblock %}

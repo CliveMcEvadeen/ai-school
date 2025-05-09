@@ -1,0 +1,76 @@
+{% extends "feedback/base.html" %}
+{% block title %}Student Feedback Messages{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Student Feedback Messages</h2>
+    <table class="table table-striped table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>Student</th>
+                <th>Feedback</th>
+                <th>Reply</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedbacks %}
+            <tr>
+                <td>{{ feedback.student.admin.first_name }} {{ feedback.student.admin.last_name }}</td>
+                <td>{{ feedback.feedback }}</td>
+                <td>{{ feedback.reply }}</td>
+                <td>
+                    <form method="post" class="d-inline feedback-reply-form" data-id="{{ feedback.id }}">
+                        {% csrf_token %}
+                        <input type="text" name="reply" class="form-control form-control-sm" placeholder="Reply" required />
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">Send Reply</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No feedback messages found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.querySelectorAll('.feedback-reply-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const feedbackId = this.getAttribute('data-id');
+        const replyInput = this.querySelector('input[name="reply"]');
+        const reply = replyInput.value.trim();
+        if (!reply) {
+            alert('Reply cannot be empty.');
+            return;
+        }
+        fetch("", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'id': feedbackId,
+                'reply': reply,
+            })
+        })
+        .then(response => response.text())
+        .then(success => {
+            if (success === 'True') {
+                alert('Reply sent successfully.');
+                location.reload();
+            } else {
+                alert('Failed to send reply.');
+            }
+        })
+        .catch(error => {
+            alert('Error sending reply.');
+            console.error(error);
+        });
+    });
+});
+</script>
+{% endblock %}

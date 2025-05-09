@@ -1,0 +1,37 @@
+{% extends "results/base.html" %}
+{% block title %}Edit Exam Timetable{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Edit Exam Timetable</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label for="id_exam" class="form-label">Exam</label>
+            {{ form.exam }}
+            {{ form.exam.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_subject" class="form-label">Subject</label>
+            {{ form.subject }}
+            {{ form.subject.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_date" class="form-label">Date</label>
+            {{ form.date }}
+            {{ form.date.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_start_time" class="form-label">Start Time</label>
+            {{ form.start_time }}
+            {{ form.start_time.errors }}
+        </div>
+        <div class="mb-3">
+            <label for="id_end_time" class="form-label">End Time</label>
+            {{ form.end_time }}
+            {{ form.end_time.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Exam Timetable</button>
+    </form>
+</div>
+{% endblock %}

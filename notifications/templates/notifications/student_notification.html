@@ -1,0 +1,63 @@
+{% extends "notifications/base.html" %}
+{% block title %}Notify Students{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Send Notification to Students</h2>
+    <form id="notifyStudentForm" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="studentSelect" class="form-label">Select Student</label>
+            <select id="studentSelect" name="id" class="form-select">
+                <option value="">Select Student</option>
+                {% for student in students %}
+                <option value="{{ student.id }}">{{ student.admin.first_name }} {{ student.admin.last_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="message" class="form-label">Message</label>
+            <textarea id="message" name="message" class="form-control" rows="4"></textarea>
+        </div>
+        <button type="button" class="btn btn-primary" id="sendNotification">Send Notification</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('sendNotification').addEventListener('click', function() {
+    const studentId = document.getElementById('studentSelect').value;
+    const message = document.getElementById('message').value.trim();
+    if (!studentId) {
+        alert('Please select a student.');
+        return;
+    }
+    if (!message) {
+        alert('Please enter a message.');
+        return;
+    }
+    fetch("{% url 'send_student_notification' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'id': studentId,
+            'message': message,
+        })
+    })
+    .then(response => response.text())
+    .then(success => {
+        if (success === 'True') {
+            alert('Notification sent successfully.');
+            document.getElementById('notifyStudentForm').reset();
+        } else {
+            alert('Failed to send notification.');
+        }
+    })
+    .catch(error => {
+        alert('Error sending notification.');
+        console.error(error);
+    });
+});
+</script>
+{% endblock %}

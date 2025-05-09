@@ -1,0 +1,43 @@
+{% extends "academic_management/base.html" %}
+{% block title %}Manage Resources{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Manage Resources</h2>
+    <a href="{% url 'add_resource' %}" class="btn btn-primary mb-3">Add Resource</a>
+    <table class="table table-striped table-hover">
+        <thead class="table-primary">
+            <tr>
+                <th>Lesson Plan</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>File</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for resource in resources %}
+            <tr>
+                <td>{{ resource.lesson_plan.title }}</td>
+                <td>{{ resource.title }}</td>
+                <td>{{ resource.description|truncatewords:10 }}</td>
+                <td>
+                    {% if resource.file %}
+                    <a href="{{ resource.file.url }}" target="_blank">Download</a>
+                    {% else %}
+                    No file
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'edit_resource' resource.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="{% url 'delete_resource' resource.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this resource?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No resources found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
