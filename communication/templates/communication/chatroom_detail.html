@@ -3,46 +3,58 @@
 {% load static %}
 
 {% block content %}
-<div class="d-flex flex-column" style="height: 80vh;">
-    <div class="d-flex border-bottom p-2 align-items-center">
-        <h4 class="mb-0 flex-grow-1">Chatroom: {{ chatroom.name }}</h4>
-        <button id="darkModeToggle" class="btn btn-outline-secondary btn-sm">Toggle Dark Mode</button>
-    </div>
-    <div id="message-list" class="flex-grow-1 overflow-auto p-3 bg-light" style="scroll-behavior: smooth;">
+<div class="chat-container d-flex flex-column" style="height: 80vh; max-width: 900px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <header class="chat-header d-flex align-items-center justify-content-between p-3 bg-primary text-white">
+        <h4 class="mb-0">{{ chatroom.name }}</h4>
+        <button id="darkModeToggle" class="btn btn-outline-light btn-sm">Toggle Dark Mode</button>
+    </header>
+    <main id="message-list" class="flex-grow-1 overflow-auto p-3 bg-light" style="scroll-behavior: smooth; display: flex; flex-direction: column;">
         {% for message in messages %}
-        <div class="message d-flex {% if message.sender == user %}justify-content-end{% else %}justify-content-start{% endif %} mb-2">
-            <div class="message-content p-2 rounded" style="max-width: 60%; background-color: {% if message.sender == user %}#dcf8c6{% else %}#fff{% endif %}; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;" data-message-id="{{ message.id }}">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <strong>{{ message.sender.get_full_name }}</strong>
-                    <small class="text-muted ms-2">{{ message.timestamp|timesince }} ago</small>
-                </div>
-                <p class="mb-1">{{ message.content|linebreaks }}</p>
+        {% if forloop.first or messages|index:forloop.counter0.sender != message.sender %}
+        <div class="message-group mb-3" data-sender-id="{{ message.sender.id }}">
+            <div class="message-sender fw-bold mb-1">{{ message.sender.get_full_name }}</div>
+            <div class="message-items d-flex flex-column gap-2">
+        {% endif %}
+            <div class="message-item p-2 rounded shadow-sm {% if message.sender == user %}align-self-end bg-success text-white{% else %}align-self-start bg-white text-dark{% endif %}" style="max-width: 70%;" data-message-id="{{ message.id }}">
+                <div class="message-content">{% if message.deleted %}<em>Message deleted</em>{% else %}{{ message.content|linebreaks }}{% if message.edited %} <small>(edited)</small>{% endif %}{% endif %}</div>
                 {% if message.attachments.all %}
-                <div class="attachments mb-1">
+                <div class="attachments mt-1">
                     {% for attachment in message.attachments.all %}
-                    <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name }}</a><br>
+                    <a href="{{ attachment.file.url }}" target="_blank" class="d-block small text-decoration-underline">{{ attachment.file.name }}</a>
                     {% endfor %}
                 </div>
                 {% endif %}
-                <div class="message-reactions">
-                    <!-- Placeholder for reactions -->
-                    <span class="reaction" title="Like">👍</span>
-                    <span class="reaction" title="Love">❤️</span>
-                    <span class="reaction" title="Laugh">😂</span>
+                <div class="message-meta d-flex justify-content-between align-items-center mt-1 small opacity-75">
+                    <span class="timestamp">{{ message.timestamp|date:"H:i, M d" }}</span>
+                    <span class="reactions" data-message-id="{{ message.id }}">
+                        {% for reaction in message.reactions.all %}
+                        <button class="btn btn-sm btn-light reaction-btn active" title="{{ reaction.emoji }}">{{ reaction.emoji }}</button>
+                        {% endfor %}
+                        <button class="btn btn-sm btn-light reaction-btn" title="Like">👍</button>
+                        <button class="btn btn-sm btn-light reaction-btn" title="Love">❤️</button>
+                        <button class="btn btn-sm btn-light reaction-btn" title="Laugh">😂</button>
+                    </span>
+                    {% if message.sender == user and not message.deleted %}
+                    <span class="message-actions">
+                        <button class="btn btn-sm btn-link edit-message-btn" title="Edit">Edit</button>
+                        <button class="btn btn-sm btn-link delete-message-btn text-danger" title="Delete">Delete</button>
+                    </span>
+                    {% endif %}
                 </div>
             </div>
+        {% if forloop.last or messages|index:forloop.counter0.sender != message.sender %}
+            </div>
         </div>
+        {% endif %}
         {% empty %}
         <p class="text-center text-muted mt-3">No messages yet.</p>
         {% endfor %}
-    </div>
-    <form id="messageForm" method="post" enctype="multipart/form-data" class="p-3 border-top bg-white">
+    </main>
+    <form id="messageForm" method="post" enctype="multipart/form-data" class="p-3 border-top bg-white d-flex gap-2 align-items-center">
         {% csrf_token %}
-        <div class="input-group">
-            {{ form.content }}
-            <button type="button" id="emojiBtn" class="btn btn-outline-secondary">😊</button>
-            <button type="submit" class="btn btn-primary">Send</button>
-        </div>
+        {{ form.content|add_class:"form-control flex-grow-1" }}
+        <button type="button" id="emojiBtn" class="btn btn-outline-secondary">😊</button>
+        <button type="submit" class="btn btn-primary">Send</button>
     </form>
 </div>
 
@@ -87,10 +99,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const typingIndicator = document.createElement('div');
     typingIndicator.id = 'typingIndicator';
     typingIndicator.style.fontStyle = 'italic';
-    typingIndicator.style.marginBottom = '10px';
+    typingIndicator.style.margin = '5px 10px';
+    typingIndicator.style.color = '#666';
     typingIndicator.textContent = '';
 
-    messageList.parentNode.insertBefore(typingIndicator, messageList);
+    messageList.parentNode.insertBefore(typingIndicator, messageList.nextSibling);
 
     // Send typing event
     textarea.addEventListener('input', () => {
@@ -113,28 +126,50 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.type === 'message') {
             // Append new message to message list
             const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', 'd-flex');
-            if (data.sender_id == userId) {
-                messageDiv.classList.add('justify-content-end');
-            } else {
-                messageDiv.classList.add('justify-content-start');
-            }
-            const bgColor = data.sender_id == userId ? '#dcf8c6' : '#fff';
+            messageDiv.classList.add('message-item', 'p-2', 'rounded', 'shadow-sm');
+            messageDiv.style.maxWidth = '70%';
+            messageDiv.dataset.messageId = data.message_id || '';
             messageDiv.innerHTML = `
-                <div class="message-content p-2 rounded" style="max-width: 60%; background-color: ${bgColor}; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative;" data-message-id="${data.message_id || ''}">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <strong>${data.sender_name}</strong>
-                        <small class="text-muted ms-2">${data.timestamp}</small>
-                    </div>
-                    <p class="mb-1">${data.message}</p>
-                    <div class="message-reactions">
-                        <span class="reaction" title="Like">👍</span>
-                        <span class="reaction" title="Love">❤️</span>
-                        <span class="reaction" title="Laugh">😂</span>
-                    </div>
+                <div class="message-content">${data.message}</div>
+                <div class="message-meta d-flex justify-content-between align-items-center mt-1 small opacity-75">
+                    <span class="timestamp">${data.timestamp}</span>
+                    <span class="reactions" data-message-id="${data.message_id}">
+                        <button class="btn btn-sm btn-light reaction-btn" title="Like">👍</button>
+                        <button class="btn btn-sm btn-light reaction-btn" title="Love">❤️</button>
+                        <button class="btn btn-sm btn-light reaction-btn" title="Laugh">😂</button>
+                    </span>
                 </div>
             `;
-            messageList.appendChild(messageDiv);
+            if (data.sender_id == userId) {
+                messageDiv.classList.add('align-self-end', 'bg-success', 'text-white');
+            } else {
+                messageDiv.classList.add('align-self-start', 'bg-white', 'text-dark');
+            }
+            // Group messages by sender
+            let lastGroup = null;
+            const groups = messageList.querySelectorAll('.message-group');
+            if (groups.length > 0) {
+                lastGroup = groups[groups.length - 1];
+                const lastSender = lastGroup.dataset.senderId;
+                if (lastSender != data.sender_id) {
+                    lastGroup = null;
+                }
+            }
+            if (!lastGroup) {
+                const groupDiv = document.createElement('div');
+                groupDiv.classList.add('message-group', 'mb-3');
+                groupDiv.dataset.senderId = data.sender_id;
+                const senderDiv = document.createElement('div');
+                senderDiv.classList.add('message-sender', 'fw-bold', 'mb-1');
+                senderDiv.textContent = data.sender_name;
+                const itemsDiv = document.createElement('div');
+                itemsDiv.classList.add('message-items', 'd-flex', 'flex-column', 'gap-2');
+                groupDiv.appendChild(senderDiv);
+                groupDiv.appendChild(itemsDiv);
+                messageList.appendChild(groupDiv);
+                lastGroup = groupDiv;
+            }
+            lastGroup.querySelector('.message-items').appendChild(messageDiv);
             messageList.scrollTop = messageList.scrollHeight;
         } else if (data.type === 'typing') {
             if (data.is_typing) {
@@ -145,30 +180,92 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (data.type === 'read_receipt') {
             // TODO: Update message read status UI
             console.log(`Message ${data.message_id} read by user ${data.sender_id}`);
+        } else if (data.type === 'reaction_update') {
+            // TODO: Update reactions UI for the message
+            console.log(`Reactions updated for message ${data.message_id}`, data.reactions);
+        } else if (data.type === 'message_edited') {
+            // TODO: Update message content UI for edited message
+            console.log(`Message ${data.message_id} edited:`, data.new_content);
+        } else if (data.type === 'message_deleted') {
+            // TODO: Update message UI to show deleted state
+            console.log(`Message ${data.message_id} deleted`);
+        } else if (data.type === 'presence_update') {
+            // TODO: Update user presence UI
+            console.log(`User ${data.user_id} is ${data.is_online ? 'online' : 'offline'}`);
         }
     };
 
     // Send read receipt on page load for all messages (simplified)
-    const messageElements = document.querySelectorAll('.message-content');
-    messageElements.forEach((el, index) => {
+    const messageElements = document.querySelectorAll('.message-item');
+    messageElements.forEach((el) => {
         chatSocket.send(JSON.stringify({
             'type': 'read_receipt',
             'message_id': el.dataset.messageId
         }));
     });
 
-    // Send message on form submit
-    const messageForm = document.getElementById('messageForm');
-    messageForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const messageInput = textarea;
-        const message = messageInput.value.trim();
-        if (message.length > 0) {
+    // Reaction button click handler
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('reaction-btn')) {
+            const btn = e.target;
+            const messageId = btn.closest('.reactions').dataset.messageId;
+            const emoji = btn.title;
+            const action = btn.classList.contains('active') ? 'remove' : 'add';
             chatSocket.send(JSON.stringify({
-                'type': 'message',
-                'message': message
+                'type': 'reaction',
+                'message_id': messageId,
+                'emoji': emoji,
+                'action': action
             }));
-            messageInput.value = '';
+            btn.classList.toggle('active');
+        }
+    });
+
+    // Edit and delete button handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('edit-message-btn')) {
+            const messageItem = e.target.closest('.message-item');
+            const messageContentDiv = messageItem.querySelector('.message-content');
+            const originalContent = messageContentDiv.textContent.trim();
+            const messageId = messageItem.dataset.messageId;
+
+            // Replace content with textarea for editing
+            const textarea = document.createElement('textarea');
+            textarea.classList.add('form-control');
+            textarea.value = originalContent;
+            messageContentDiv.innerHTML = '';
+            messageContentDiv.appendChild(textarea);
+
+            // Replace edit button with save button
+            e.target.style.display = 'none';
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save';
+            saveBtn.classList.add('btn', 'btn-sm', 'btn-primary', 'ms-2');
+            e.target.parentNode.appendChild(saveBtn);
+
+            saveBtn.addEventListener('click', function() {
+                const newContent = textarea.value.trim();
+                if (newContent.length > 0) {
+                    chatSocket.send(JSON.stringify({
+                        'type': 'edit_message',
+                        'message_id': messageId,
+                        'new_content': newContent
+                    }));
+                }
+                // Restore UI
+                messageContentDiv.textContent = newContent;
+                saveBtn.remove();
+                e.target.style.display = '';
+            });
+        } else if (e.target.classList.contains('delete-message-btn')) {
+            const messageItem = e.target.closest('.message-item');
+            const messageId = messageItem.dataset.messageId;
+            if (confirm('Are you sure you want to delete this message?')) {
+                chatSocket.send(JSON.stringify({
+                    'type': 'delete_message',
+                    'message_id': messageId
+                }));
+            }
         }
     });
 
@@ -179,18 +276,58 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-.dark-mode {
+body.dark-mode {
     background-color: #121212;
     color: #e0e0e0;
 }
-.dark-mode .message-content {
-    background-color: #333;
-    color: #e0e0e0;
+body.dark-mode .chat-container {
+    border-color: #444;
+    box-shadow: 0 2px 8px rgba(255,255,255,0.1);
 }
-.message-reactions span {
+body.dark-mode .chat-header {
+    background-color: #1a1a1a;
+}
+body.dark-mode .message-item {
+    background-color: #333 !important;
+    color: #e0e0e0 !important;
+}
+.message-group {
+    margin-bottom: 1rem;
+}
+.message-sender {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #555;
+}
+.message-item {
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+.message-meta {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+}
+.reaction-btn {
+    border: none;
+    background: transparent;
     cursor: pointer;
-    margin-right: 5px;
-    font-size: 1.2em;
+    padding: 0 0.25rem;
+    font-size: 1.1rem;
+}
+.reaction-btn.active {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+.reaction-btn:hover {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+#messageForm {
+    gap: 0.5rem;
 }
 </style>
 {% endblock %}
